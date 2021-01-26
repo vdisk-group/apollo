@@ -3,6 +3,7 @@ package com.ctrip.framework.apollo.portal.spi.configuration;
 import com.ctrip.framework.apollo.common.condition.ConditionalOnMissingProfile;
 import com.ctrip.framework.apollo.core.utils.StringUtils;
 import com.ctrip.framework.apollo.portal.component.config.PortalConfig;
+import com.ctrip.framework.apollo.portal.repository.UserRepository;
 import com.ctrip.framework.apollo.portal.spi.LogoutHandler;
 import com.ctrip.framework.apollo.portal.spi.SsoHeartbeatHandler;
 import com.ctrip.framework.apollo.portal.spi.UserInfoHolder;
@@ -18,6 +19,9 @@ import com.ctrip.framework.apollo.portal.spi.defaultimpl.DefaultUserService;
 import com.ctrip.framework.apollo.portal.spi.ldap.ApolloLdapAuthenticationProvider;
 import com.ctrip.framework.apollo.portal.spi.ldap.FilterLdapByGroupUserSearch;
 import com.ctrip.framework.apollo.portal.spi.ldap.LdapUserService;
+import com.ctrip.framework.apollo.portal.spi.oidc.OidcAuthenticationSuccessEventListener;
+import com.ctrip.framework.apollo.portal.spi.oidc.OidcLocalUserService;
+import com.ctrip.framework.apollo.portal.spi.oidc.OidcUserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserService;
 import com.google.common.collect.Maps;
@@ -421,11 +425,79 @@ public class AuthConfiguration {
     }
   }
 
+  @Configuration
+  @Profile("oidc")
+  static class OidcAuthAutoConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(SsoHeartbeatHandler.class)
+    public SsoHeartbeatHandler defaultSsoHeartbeatHandler() {
+      return new DefaultSsoHeartbeatHandler();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserInfoHolder.class)
+    public UserInfoHolder oidcUserInfoHolder() {
+      return new OidcUserInfoHolder();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(LogoutHandler.class)
+    public LogoutHandler logoutHandler() {
+      return new DefaultLogoutHandler();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(JdbcUserDetailsManager.class)
+    public JdbcUserDetailsManager jdbcUserDetailsManager(AuthenticationManagerBuilder auth,
+        DataSource datasource) throws Exception {
+      return new SpringSecurityAuthAutoConfiguration().jdbcUserDetailsManager(auth, datasource);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(UserService.class)
+    public OidcLocalUserService oidcLocalUserService(JdbcUserDetailsManager userDetailsManager,
+        UserRepository userRepository) {
+      return new OidcLocalUserService(userDetailsManager, userRepository);
+    }
+
+    @Bean
+    public OidcAuthenticationSuccessEventListener oidcAuthenticationSuccessEventListener(OidcLocalUserService oidcLocalUserService) {
+      return new OidcAuthenticationSuccessEventListener(oidcLocalUserService);
+    }
+  }
+
+  @Order(99)
+  @Profile("oidc")
+  @Configuration
+  @EnableWebSecurity
+  @EnableGlobalMethodSecurity(prePostEnabled = true)
+  static class OidcWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+    public static final String USER_ROLE = "USER";
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+      http.csrf().disable();
+      http.headers().frameOptions().sameOrigin();
+      http.authorizeRequests()
+          .antMatchers(BY_PASS_URLS).permitAll()
+          .antMatchers("/**").hasAnyRole(USER_ROLE);
+      http.oauth2Login().loginPage("/signin").defaultSuccessUrl("/", true).permitAll().failureUrl("/signin?#/error").and()
+          .httpBasic();
+      http.oauth2Client();
+      http.logout().logoutUrl("/user/logout").invalidateHttpSession(true).clearAuthentication(true)
+          .logoutSuccessUrl("/signin?#/logout");
+      http.exceptionHandling().authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/signin"));
+    }
+
+  }
+
   /**
    * default profile
    */
   @Configuration
-  @ConditionalOnMissingProfile({"ctrip", "auth", "ldap"})
+  @ConditionalOnMissingProfile({"ctrip", "auth", "ldap", "oidc"})
   static class DefaultAuthAutoConfiguration {
 
     @Bean
@@ -453,7 +525,7 @@ public class AuthConfiguration {
     }
   }
 
-  @ConditionalOnMissingProfile({"auth", "ldap"})
+  @ConditionalOnMissingProfile({"auth", "ldap", "oidc"})
   @Configuration
   @EnableWebSecurity
   @EnableGlobalMethodSecurity(prePostEnabled = true)
