@@ -407,7 +407,7 @@ public class RemoteConfigRepositoryTest {
     }
   }
 
-  public static class MockHttpUtil extends HttpUtil {
+  public static class MockHttpUtil implements HttpUtil {
 
     @Override
     public <T> HttpResponse<T> doGet(HttpRequest httpRequest, Class<T> responseType) {

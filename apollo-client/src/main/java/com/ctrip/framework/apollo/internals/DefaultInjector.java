@@ -7,6 +7,7 @@ import com.ctrip.framework.apollo.spi.ConfigRegistry;
 import com.ctrip.framework.apollo.spi.DefaultConfigFactory;
 import com.ctrip.framework.apollo.spi.DefaultConfigFactoryManager;
 import com.ctrip.framework.apollo.spi.DefaultConfigRegistry;
+import com.ctrip.framework.apollo.spi.HttpClientFactory;
 import com.ctrip.framework.apollo.tracer.Tracer;
 import com.ctrip.framework.apollo.util.ConfigUtil;
 import com.ctrip.framework.apollo.util.factory.DefaultPropertiesFactory;
@@ -14,8 +15,10 @@ import com.ctrip.framework.apollo.util.factory.PropertiesFactory;
 import com.ctrip.framework.apollo.util.http.HttpUtil;
 
 import com.ctrip.framework.apollo.util.yaml.YamlParser;
+import com.ctrip.framework.foundation.internals.ServiceBootstrap;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 
 /**
@@ -60,7 +63,12 @@ public class DefaultInjector implements Injector {
       bind(ConfigRegistry.class).to(DefaultConfigRegistry.class).in(Singleton.class);
       bind(ConfigFactory.class).to(DefaultConfigFactory.class).in(Singleton.class);
       bind(ConfigUtil.class).in(Singleton.class);
-      bind(HttpUtil.class).in(Singleton.class);
+      bind(HttpUtil.class).toProvider(new Provider<HttpUtil>() {
+        @Override
+        public HttpUtil get() {
+          return ServiceBootstrap.loadPrimary(HttpClientFactory.class).createHttpClient();
+        }
+      }).in(Singleton.class);
       bind(ConfigServiceLocator.class).in(Singleton.class);
       bind(RemoteConfigLongPollService.class).in(Singleton.class);
       bind(YamlParser.class).in(Singleton.class);
