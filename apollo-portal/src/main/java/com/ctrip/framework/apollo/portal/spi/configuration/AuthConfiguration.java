@@ -480,9 +480,13 @@ public class AuthConfiguration {
 
     private final InMemoryClientRegistrationRepository clientRegistrationRepository;
 
+    private final OAuth2ResourceServerProperties oauth2ResourceServerProperties;
+
     public OidcWebSecurityConfigurerAdapter(
-        InMemoryClientRegistrationRepository clientRegistrationRepository) {
+        InMemoryClientRegistrationRepository clientRegistrationRepository,
+        OAuth2ResourceServerProperties oauth2ResourceServerProperties) {
       this.clientRegistrationRepository = clientRegistrationRepository;
+      this.oauth2ResourceServerProperties = oauth2ResourceServerProperties;
     }
 
     @Override
@@ -495,7 +499,11 @@ public class AuthConfiguration {
               new ExcludeClientCredentialsClientRegistrationRepository(
                   this.clientRegistrationRepository)));
       http.oauth2Client();
-      http.oauth2ResourceServer().jwt();
+      // make jwt optional
+      String jwtIssuerUri = this.oauth2ResourceServerProperties.getJwt().getIssuerUri();
+      if (!StringUtils.isBlank(jwtIssuerUri)) {
+        http.oauth2ResourceServer().jwt();
+      }
     }
   }
 
