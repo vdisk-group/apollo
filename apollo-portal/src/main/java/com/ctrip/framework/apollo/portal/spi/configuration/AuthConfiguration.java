@@ -22,6 +22,7 @@ import com.ctrip.framework.apollo.portal.spi.ldap.LdapUserService;
 import com.ctrip.framework.apollo.portal.spi.oidc.ExcludeClientCredentialsClientRegistrationRepository;
 import com.ctrip.framework.apollo.portal.spi.oidc.OidcAuthenticationSuccessEventListener;
 import com.ctrip.framework.apollo.portal.spi.oidc.OidcLocalUserService;
+import com.ctrip.framework.apollo.portal.spi.oidc.OidcLogoutHandler;
 import com.ctrip.framework.apollo.portal.spi.oidc.OidcUserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserInfoHolder;
 import com.ctrip.framework.apollo.portal.spi.springsecurity.SpringSecurityUserService;
@@ -51,6 +52,7 @@ import org.springframework.security.ldap.authentication.BindAuthenticator;
 import org.springframework.security.ldap.authentication.LdapAuthenticationProvider;
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopulator;
+import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.InMemoryClientRegistrationRepository;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -448,8 +450,8 @@ public class AuthConfiguration {
 
     @Bean
     @ConditionalOnMissingBean(LogoutHandler.class)
-    public LogoutHandler logoutHandler() {
-      return new DefaultLogoutHandler();
+    public LogoutHandler oidcLogoutHandler() {
+      return new OidcLogoutHandler();
     }
 
     @Bean
@@ -499,6 +501,12 @@ public class AuthConfiguration {
               new ExcludeClientCredentialsClientRegistrationRepository(
                   this.clientRegistrationRepository)));
       http.oauth2Client();
+      http.logout(configure -> {
+        OidcClientInitiatedLogoutSuccessHandler logoutSuccessHandler = new OidcClientInitiatedLogoutSuccessHandler(
+            this.clientRegistrationRepository);
+        logoutSuccessHandler.setPostLogoutRedirectUri("{baseUrl}");
+        configure.logoutSuccessHandler(logoutSuccessHandler);
+      });
       // make jwt optional
       String jwtIssuerUri = this.oauth2ResourceServerProperties.getJwt().getIssuerUri();
       if (!StringUtils.isBlank(jwtIssuerUri)) {
