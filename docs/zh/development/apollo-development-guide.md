@@ -62,6 +62,21 @@ Apollo本地开发需要以下组件：
 
 ![ConfigAdminApplication-Eureka](https://raw.githubusercontent.com/ctripcorp/apollo/master/doc/images/local-development/ConfigAdminApplication-Eureka.png)
 
+> 注：除了在Eureka确认服务状态外，还可以通过健康检查接口确认服务健康状况：
+>
+> apollo-adminservice： [http://localhost:8090/health](http://localhost:8090/health)
+> apollo-configservice： [http://localhost:8080/health](http://localhost:8080/health)
+>
+> 如果服务健康，返回内容中的status.code应当为`UP`：
+>
+>     {
+>       "status": {
+>         "code": "UP",
+>         ...
+>       },
+>       ...
+>     }
+
 ## 2.2 Apollo-Portal
 
 下面以Intellij Community 2016.2版本为例来说明如何在本地启动`apollo-portal`。
