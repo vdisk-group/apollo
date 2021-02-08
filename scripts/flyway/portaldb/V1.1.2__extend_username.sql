@@ -1,8 +1,6 @@
-# delta schema to upgrade apollo portal db from v1.7.0 to v1.8.0
+# delta schema to upgrade apollo config db from v1.7.0 to v1.8.0
 
 Use ApolloPortalDB;
-
-alter table `AppNamespace`  change AppId AppId varchar(64) NOT NULL DEFAULT 'default' COMMENT 'app id';
 
 ALTER TABLE `App`
     MODIFY COLUMN `DataChange_CreatedBy` VARCHAR(64) NOT NULL DEFAULT 'default' COMMENT '创建人邮箱前缀',
