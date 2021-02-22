@@ -36,6 +36,13 @@
       "defaultValue": false
     },
     {
+      "name": "apollo.cacheDir",
+      "type": "java.lang.String",
+      "sourceType": "com.ctrip.framework.apollo.util.ConfigUtil",
+      "description": "local cache directory. the default value on windows is 'c:\\opt\\data', while on mac/linux is '/opt/data'.",
+      "defaultValue": "/opt/data"
+    },
+    {
       "name": "apollo.cluster",
       "type": "java.lang.String",
       "sourceType": "com.ctrip.framework.apollo.core.ConfigConsts",
