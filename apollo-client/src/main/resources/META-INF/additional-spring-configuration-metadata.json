@@ -4,28 +4,28 @@
       "name": "apollo.accesskey.secret",
       "type": "java.lang.String",
       "sourceType": "com.ctrip.framework.foundation.internals.provider.DefaultApplicationProvider",
-      "description": "apollo client accessKey.",
+      "description": "apollo client access key.",
       "defaultValue": ""
     },
     {
       "name": "apollo.autoUpdateInjectedSpringProperties",
       "type": "java.lang.Boolean",
       "sourceType": "com.ctrip.framework.apollo.util.ConfigUtil",
-      "description": "auto update spring placeholder.",
+      "description": "whether to auto update spring placeholder or not.",
       "defaultValue": true
     },
     {
       "name": "apollo.bootstrap.enabled",
       "type": "java.lang.Boolean",
       "sourceType": "com.ctrip.framework.apollo.spring.config.PropertySourcesConstants",
-      "description": "enable inject namespace in bootstrap phase.",
+      "description": "enable injecting namespaces in bootstrap phase.",
       "defaultValue": false
     },
     {
       "name": "apollo.bootstrap.namespaces",
       "type": "java.lang.String",
       "sourceType": "com.ctrip.framework.apollo.spring.config.PropertySourcesConstants",
-      "description": "injected namespaces split with ','.",
+      "description": "namespaces to be injected during bootstrap phase, multiple namespaces should be comma-separated.",
       "defaultValue": "application"
     },
     {
