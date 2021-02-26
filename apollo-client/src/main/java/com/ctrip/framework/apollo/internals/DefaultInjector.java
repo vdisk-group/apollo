@@ -1,6 +1,9 @@
 package com.ctrip.framework.apollo.internals;
 
 import com.ctrip.framework.apollo.exceptions.ApolloConfigException;
+import com.ctrip.framework.apollo.shared.ApolloSharedContext;
+import com.ctrip.framework.apollo.shared.ApolloSharedContextImpl;
+import com.ctrip.framework.apollo.spi.ApolloSharedContextCustomizer;
 import com.ctrip.framework.apollo.spi.ConfigFactory;
 import com.ctrip.framework.apollo.spi.ConfigFactoryManager;
 import com.ctrip.framework.apollo.spi.ConfigRegistry;
@@ -11,12 +14,14 @@ import com.ctrip.framework.apollo.tracer.Tracer;
 import com.ctrip.framework.apollo.util.ConfigUtil;
 import com.ctrip.framework.apollo.util.factory.DefaultPropertiesFactory;
 import com.ctrip.framework.apollo.util.factory.PropertiesFactory;
+import com.ctrip.framework.apollo.util.http.DefaultHttpClient;
 import com.ctrip.framework.apollo.util.http.HttpUtil;
-
 import com.ctrip.framework.apollo.util.yaml.YamlParser;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import java.util.ServiceLoader;
 
 /**
  * Guice injector
@@ -55,12 +60,27 @@ public class DefaultInjector implements Injector {
   private static class ApolloModule extends AbstractModule {
     @Override
     protected void configure() {
+      final ApolloSharedContext sharedContext = new ApolloSharedContextImpl();
+      ServiceLoader<ApolloSharedContextCustomizer> customizers = ServiceLoader
+          .load(ApolloSharedContextCustomizer.class);
+      for (ApolloSharedContextCustomizer customizer : customizers) {
+        customizer.customize(sharedContext);
+      }
       bind(ConfigManager.class).to(DefaultConfigManager.class).in(Singleton.class);
       bind(ConfigFactoryManager.class).to(DefaultConfigFactoryManager.class).in(Singleton.class);
       bind(ConfigRegistry.class).to(DefaultConfigRegistry.class).in(Singleton.class);
       bind(ConfigFactory.class).to(DefaultConfigFactory.class).in(Singleton.class);
       bind(ConfigUtil.class).in(Singleton.class);
-      bind(HttpUtil.class).in(Singleton.class);
+      bind(HttpUtil.class).toProvider(new Provider<HttpUtil>() {
+        @Override
+        public HttpUtil get() {
+          HttpUtil httpUtil = sharedContext.getSharedObject(HttpUtil.class);
+          if (httpUtil == null) {
+            return new DefaultHttpClient();
+          }
+          return httpUtil;
+        }
+      }).in(Singleton.class);
       bind(ConfigServiceLocator.class).in(Singleton.class);
       bind(RemoteConfigLongPollService.class).in(Singleton.class);
       bind(YamlParser.class).in(Singleton.class);
