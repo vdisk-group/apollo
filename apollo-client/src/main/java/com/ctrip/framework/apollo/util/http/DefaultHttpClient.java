@@ -19,14 +19,14 @@ import java.util.Map;
 /**
  * @author Jason Song(song_s@ctrip.com)
  */
-public class HttpUtil {
+public class DefaultHttpClient implements HttpClient {
   private ConfigUtil m_configUtil;
   private static final Gson GSON = new Gson();
 
   /**
    * Constructor.
    */
-  public HttpUtil() {
+  public DefaultHttpClient() {
     m_configUtil = ApolloInjector.getInstance(ConfigUtil.class);
   }
 
@@ -38,6 +38,7 @@ public class HttpUtil {
    * @return the response
    * @throws ApolloConfigException if any error happened or response code is neither 200 nor 304
    */
+  @Override
   public <T> HttpResponse<T> doGet(HttpRequest httpRequest, final Class<T> responseType) {
     Function<String, T> convertResponse = new Function<String, T>() {
       @Override
@@ -57,6 +58,7 @@ public class HttpUtil {
    * @return the response
    * @throws ApolloConfigException if any error happened or response code is neither 200 nor 304
    */
+  @Override
   public <T> HttpResponse<T> doGet(HttpRequest httpRequest, final Type responseType) {
     Function<String, T> convertResponse = new Function<String, T>() {
       @Override
