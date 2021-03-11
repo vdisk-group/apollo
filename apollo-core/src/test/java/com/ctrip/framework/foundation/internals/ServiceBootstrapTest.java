@@ -48,25 +48,25 @@ public class ServiceBootstrapTest {
     ServiceBootstrap.loadPrimary(Interface7.class);
   }
 
-  public interface Interface1 {
+  interface Interface1 {
   }
 
   public static class Interface1Impl implements Interface1 {
   }
 
-  public interface Interface2 {
+  interface Interface2 {
   }
 
-  public interface Interface3 {
+  interface Interface3 {
   }
 
-  public interface Interface4 {
+  interface Interface4 {
   }
 
-  public interface Interface5 {
+  interface Interface5 {
   }
 
-  public interface Interface6 extends Ordered {
+  interface Interface6 extends Ordered {
   }
 
   public static class Interface6Impl1 implements Interface6 {
@@ -83,6 +83,6 @@ public class ServiceBootstrapTest {
     }
   }
 
-  public interface Interface7 extends Ordered {
+  interface Interface7 extends Ordered {
   }
 }
